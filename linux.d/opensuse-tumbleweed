@@ -1,0 +1,71 @@
+#!/bin/bash
+
+# Prüfe, ob GTK3 installiert ist
+FOUND_GTK3=$(rpm -qa | grep gtk3)
+
+# Liste der erforderlichen Entwicklungspakete
+REQUIRED_DEV_PACKAGES=(
+    autoconf
+    gcc
+    gcc-c++
+    make
+    cmake
+    extra-cmake-modules
+    file
+    gettext-tools
+    git
+    libcurl-devel
+    dbus-1-devel
+    glew-devel
+    gstreamer-devel
+    gstreamer-plugins-base-devel
+    gtk3-devel
+    libmspack-devel
+    Mesa-libEGL-devel
+    libOSMesa8-devel
+    libsecret-devel
+    libopenssl-devel
+    libtool
+    libudev-devel
+    ninja
+    texinfo
+    wget
+    m4
+    pkgconfig
+    python3-devel        # Oder python311-devel
+    python3-numpy        # Oder python311-numpy
+    ffmpeg-5-devel       # Erfordert Packman-Repository
+    libpng16-devel
+    libjpeg8-devel
+    libtiff-devel
+    OpenEXR-devel
+    libwebp-devel
+    eigen3-devel
+)
+
+if [[ -n "$UPDATE_LIB" ]]
+then
+    # Prüfe, welche Version von libwebkit2gtk verfügbar ist
+    if zypper se -x libwebkit2gtk-4_0-devel >/dev/null 2>&1; then
+        REQUIRED_DEV_PACKAGES+=(libwebkit2gtk-4_0-devel)
+    elif zypper se -x libwebkit2gtk-4_1-devel >/dev/null 2>&1; then
+        REQUIRED_DEV_PACKAGES+=(libwebkit2gtk-4_1-devel)
+    else
+        echo "libwebkit2gtk Entwicklungspaket nicht gefunden."
+    fi
+
+    # Füge das Packman-Repository hinzu, falls nicht vorhanden
+    if ! zypper lr | grep -q 'packman'; then
+        sudo zypper ar -cfp 90 https://ftp.gwdg.de/pub/linux/misc/packman/suse/openSUSE_Tumbleweed/ packman
+        sudo zypper refresh
+    fi
+
+    # Installiere alle erforderlichen Pakete
+    sudo zypper install -y "${REQUIRED_DEV_PACKAGES[@]}"
+
+    echo -e "done\n"
+    exit 0
+fi
+
+# Prüfe, ob GTK3-Entwicklungspaket installiert ist
+FOUND_GTK3_DEV=$(rpm -q gtk3-devel || echo '')

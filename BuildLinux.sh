@@ -5,24 +5,25 @@ export ROOT=$(dirname $(readlink -f ${0}))
 set -e # exit on first error
 
 function check_available_memory_and_disk() {
-    FREE_MEM_GB=$(free -g -t | grep 'Mem' | rev | cut -d" " -f1 | rev)
+    FREE_MEM_GB=$(grep MemTotal /proc/meminfo | awk '{printf("%.0f", $2/1024/1024)}')
     MIN_MEM_GB=10
 
     FREE_DISK_KB=$(df -k . | tail -1 | awk '{print $4}')
     MIN_DISK_KB=$((10 * 1024 * 1024))
 
     if [ ${FREE_MEM_GB} -le ${MIN_MEM_GB} ]; then
-        echo -e "\nERROR: Orca Slicer Builder requires at least ${MIN_MEM_GB}G of 'available' mem (systen has only ${FREE_MEM_GB}G available)"
+        echo -e "\nERROR: Orca Slicer Builder requires at least ${MIN_MEM_GB}G of total memory (system has only ${FREE_MEM_GB}G)"
         echo && free -h && echo
         exit 2
     fi
 
     if [[ ${FREE_DISK_KB} -le ${MIN_DISK_KB} ]]; then
-        echo -e "\nERROR: Orca Slicer Builder requires at least $(echo ${MIN_DISK_KB} |awk '{ printf "%.1fG\n", $1/1024/1024; }') (systen has only $(echo ${FREE_DISK_KB} | awk '{ printf "%.1fG\n", $1/1024/1024; }') disk free)"
+        echo -e "\nERROR: Orca Slicer Builder requires at least $(echo ${MIN_DISK_KB} | awk '{ printf "%.1fG\n", $1/1024/1024; }') of disk space (system has only $(echo ${FREE_DISK_KB} | awk '{ printf "%.1fG\n", $1/1024/1024; }') available)"
         echo && df -h . && echo
         exit 1
     fi
 }
+
 
 function usage() {
     echo "Usage: ./BuildLinux.sh [-1][-b][-c][-d][-i][-r][-s][-u]"
@@ -78,17 +79,24 @@ then
     exit 0
 fi
 
-DISTRIBUTION=$(awk -F= '/^ID=/ {print $2}' /etc/os-release)
-# treat ubuntu as debian
-if [ "${DISTRIBUTION}" == "ubuntu" ] || [ "${DISTRIBUTION}" == "linuxmint" ]
-then
+DISTRIBUTION=$(awk -F= '/^ID=/ {gsub(/"/, "", $2); print $2}' /etc/os-release)
+
+DISTRIBUTION=$(awk -F= '/^ID=/ {gsub(/"/, "", $2); print $2}' /etc/os-release)
+# Handle ubuntu, linuxmint as debian
+if [ "${DISTRIBUTION}" == "ubuntu" ] || [ "${DISTRIBUTION}" == "linuxmint" ]; then
     DISTRIBUTION="debian"
 fi
+# Handle opensuse-tumbleweed as opensuse
+if [ "${DISTRIBUTION}" == "opensuse-tumbleweed" ]; then
+    DISTRIBUTION="opensuse-tumbleweed"
+fi
+echo "Using Distribution Setting: ${DISTRIBUTION}"  # Debug output
 if [ ! -f ./linux.d/${DISTRIBUTION} ]
 then
     echo "Your distribution does not appear to be currently supported by these build scripts"
     exit 1
 fi
+
 source ./linux.d/${DISTRIBUTION}
 
 echo "FOUND_GTK3=${FOUND_GTK3}"
@@ -115,7 +123,7 @@ fi
 if [[ -n "${BUILD_DEPS}" ]]
 then
     echo "Configuring dependencies..."
-    BUILD_ARGS="-DDEP_WX_GTK3=ON"
+    BUILD_ARGS="-DDEP_WX_GTK3=ON -DSLIC3R_SKIP_BOOST_BUILD=ON"
     if [[ -n "${CLEAN_BUILD}" ]]
     then
         rm -fr deps/build

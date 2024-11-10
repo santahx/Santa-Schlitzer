@@ -1,3 +1,4 @@
+#!/usr/bin/env xdg-open
 [Desktop Entry]
 Name=OrcaSlicer
 GenericName=3D Printing Software

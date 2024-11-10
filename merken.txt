@@ -1,0 +1,14 @@
+docker run --rm \
+  -u $(id -u):$(id -g) \
+  -v /home/santa:/home/santa \
+  -v /tmp/.X11-unix:/tmp/.X11-unix \
+  -e DISPLAY=$DISPLAY \
+  -e HOME=/home/santa \
+  orcaslicer
+
+docker build \
+  --build-arg UID=1000 \
+  --build-arg GID=1000 \
+  --build-arg USER=santa \
+  -t orcaslicer .
+
