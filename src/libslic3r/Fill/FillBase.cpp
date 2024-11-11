@@ -7,6 +7,7 @@
 #include "../Geometry/Circle.hpp"
 #include "../Point.hpp"
 #include "../PrintConfig.hpp"
+#include "Fill.hpp"
 #include "../Surface.hpp"
 #include "../libslic3r.h"
 #include "../VariableWidth.hpp"
@@ -16,6 +17,7 @@
 #include "FillHoneycomb.hpp"
 #include "Fill3DHoneycomb.hpp"
 #include "FillGyroid.hpp"
+#include "FillRotatingTriangles.hpp"
 #include "FillPlanePath.hpp"
 #include "FillLine.hpp"
 #include "FillRectilinear.hpp"
@@ -25,7 +27,7 @@
 #include "FillConcentricInternal.hpp"
 #include "FillCrossHatch.hpp"
 
-// #define INFILL_DEBUG_OUTPUT
+#define INFILL_DEBUG_OUTPUT
 
 namespace Slic3r {
 
@@ -56,6 +58,7 @@ Fill* Fill::new_from_type(const InfillPattern type)
     case ipAdaptiveCubic:       return new FillAdaptive::Filler();
     case ipSupportCubic:        return new FillAdaptive::Filler();
     case ipSupportBase:         return new FillSupportBase();
+    case ipRotatingTriangles:   return new FillRotatingTriangles();
     case ipLightning:           return new FillLightning::Filler();
     // BBS: for internal solid infill only
     case ipConcentricInternal:  return new FillConcentricInternal();

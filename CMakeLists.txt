@@ -409,9 +409,9 @@ if(SLIC3R_STATIC)
     # set(Boost_USE_STATIC_RUNTIME ON)
 endif()
 #set(Boost_DEBUG ON)
-# set(Boost_COMPILER "-mgw81")
-# boost::process was introduced first in version 1.64.0,
-# boost::beast::detail::base64 was introduced first in version 1.66.0
+#set(Boost_COMPILER "-mgw81")
+#boost::process was introduced first in version 1.64.0,
+#boost::beast::detail::base64 was introduced first in version 1.66.0
 find_package(Boost 1.66 REQUIRED COMPONENTS system filesystem thread log locale regex chrono atomic date_time iostreams program_options)
 
 add_library(boost_libs INTERFACE)
@@ -780,8 +780,8 @@ endif ()
 install(FILES ${CMAKE_SOURCE_DIR}/LICENSE.txt DESTINATION ".")
 configure_file(${LIBDIR}/platform/unix/fhs.hpp.in ${LIBDIR_BIN}/platform/unix/fhs.hpp)
 
-set (CPACK_PACKAGE_NAME "OrcaSlicer")
-set (CPACK_PACKAGE_VENDOR "SoftFever")
+set (CPACK_PACKAGE_NAME "SantaSchlitzer")
+set (CPACK_PACKAGE_VENDOR "SantaHX")
 set (CPACK_PACKAGE_VERSION_MAJOR "${ORCA_VERSION_MAJOR}")
 set (CPACK_PACKAGE_VERSION_MINOR "${ORCA_VERSION_MINOR}")
 set (CPACK_PACKAGE_VERSION_PATCH "${ORCA_VERSION_PATCH}")

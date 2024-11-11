@@ -12,6 +12,7 @@
 #include "ExtrusionEntity.hpp"
 #include "FillBase.hpp"
 #include "FillRectilinear.hpp"
+#include "FillRotatingTriangles.hpp"
 #include "FillLightning.hpp"
 #include "FillConcentricInternal.hpp"
 #include "FillConcentric.hpp"
@@ -848,30 +849,30 @@ Polylines Layer::generate_sparse_infill_polylines_for_anchoring(FillAdaptive::Oc
 		if (surface_fill.surface.surface_type != stInternal) {
 			continue;
 		}
-
-        switch (surface_fill.params.pattern) {
-        case ipCount: continue; break;
-        case ipSupportBase: continue; break;
-        case ipConcentricInternal: continue; break;
-        case ipLightning:
-		case ipAdaptiveCubic:
-        case ipSupportCubic:
-        case ipRectilinear:
-        case ipMonotonic:
-        case ipMonotonicLine:
-        case ipAlignedRectilinear:
-        case ipGrid:
-        case ipTriangles:
-        case ipStars:
-        case ipCubic:
-        case ipLine:
-        case ipConcentric:
-        case ipHoneycomb:
-        case ip3DHoneycomb:
-        case ipGyroid:
-        case ipHilbertCurve:
-        case ipArchimedeanChords:
-        case ipOctagramSpiral: break;
+		switch (surface_fill.params.pattern) {
+            case ipCount: continue; break;
+            case ipSupportBase: continue; break;
+            case ipConcentricInternal: continue; break;
+            case ipLightning:
+            case ipAdaptiveCubic:
+            case ipSupportCubic:
+            case ipRectilinear:
+            case ipMonotonic:
+            case ipMonotonicLine:
+            case ipAlignedRectilinear:
+            case ipGrid:
+            case ipTriangles:
+            case ipStars:
+            case ipCubic:
+            case ipLine:
+            case ipConcentric:
+            case ipHoneycomb:
+            case ip3DHoneycomb:
+            case ipGyroid:
+            case ipHilbertCurve:
+            case ipArchimedeanChords:
+            case ipRotatingTriangles:
+            case ipOctagramSpiral: break;
         }
 
         // Create the filler object.

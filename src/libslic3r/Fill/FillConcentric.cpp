@@ -10,19 +10,25 @@
 namespace Slic3r {
 
 template<typename LINE_T>
+template<typename LINE_T>
 int stagger_seam_index(int ind, LINE_T line, double shift, bool dir)
 {
-    Point const *point = &line.points[ind];
+    const Point* point = &line.points[ind];
     double dist = 0;
+
     while (dist < shift / SCALING_FACTOR) {
-        if (dir)
+        if (dir) {
             ind = (ind + 1) % line.points.size();
-        else
-            ind = ind > 0 ? --ind : line.points.size() - 1;
-        Point const &next = line.points[ind];
+        } else {
+            // Trennen des Dekrements und der Zuweisung zur Vermeidung undefinierten Verhaltens
+            ind = (ind > 0) ? ind - 1 : line.points.size() - 1;
+        }
+
+        const Point& next = line.points[ind];
         dist += point->distance_to(next);
         point = &next;
-    };
+    }
+
     return ind;
 }
 

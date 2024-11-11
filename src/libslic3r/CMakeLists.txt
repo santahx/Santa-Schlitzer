@@ -85,6 +85,8 @@ set(lisbslic3r_sources
     FileParserError.hpp
     Fill/Fill.cpp
     Fill/Fill.hpp
+    Fill/FillRotatingTriangles.cpp       # Füllmuster RotatingTriangles hinzugefügt
+    Fill/FillRotatingTriangles.hpp       # Headerdatei für das Füllmuster
     Fill/Fill3DHoneycomb.cpp
     Fill/Fill3DHoneycomb.hpp
     Fill/FillAdaptive.cpp
