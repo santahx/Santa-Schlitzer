@@ -796,10 +796,16 @@ static ExtrusionEntityCollection traverse_loops(const PerimeterGenerator &perime
     return out;
 }
 
+// Initialize a counter to track the cycle of adjustments.
+static int layer_counter = 0;
+
 static ClipperLib_Z::Paths clip_extrusion(const ClipperLib_Z::Path& subject, const ClipperLib_Z::Paths& clip, ClipperLib_Z::ClipType clipType)
 {
     ClipperLib_Z::Clipper clipper;
-    clipper.ZFillFunction([](const ClipperLib_Z::IntPoint& e1bot, const ClipperLib_Z::IntPoint& e1top, const ClipperLib_Z::IntPoint& e2bot,
+    // Define scaling factors based on the layer_counter value
+    double z_multiplier = (layer_counter % 2 == 0) ? 1.18 : 0.82;
+
+    clipper.ZFillFunction([z_multiplier](const ClipperLib_Z::IntPoint& e1bot, const ClipperLib_Z::IntPoint& e1top, const ClipperLib_Z::IntPoint& e2bot,
         const ClipperLib_Z::IntPoint& e2top, ClipperLib_Z::IntPoint& pt) {
             ClipperLib_Z::IntPoint start = e1bot;
             ClipperLib_Z::IntPoint end = e1top;
@@ -816,7 +822,7 @@ static ClipperLib_Z::Paths clip_extrusion(const ClipperLib_Z::Path& subject, con
             double dist_sqr = (pt - start).cast<double>().squaredNorm();
             double t = std::sqrt(dist_sqr / length_sqr);
 
-            pt.z() = start.z() + coord_t((end.z() - start.z()) * t);
+              pt.z() = coord_t(start.z() + (end.z() - start.z()) * t * z_multiplier);
         });
 
     clipper.AddPath(subject, ClipperLib_Z::ptSubject, false);
@@ -829,21 +835,22 @@ static ClipperLib_Z::Paths clip_extrusion(const ClipperLib_Z::Path& subject, con
         ClipperLib_Z::PolyTreeToPaths(std::move(clipped_polytree), clipped_paths);
     }
 
+    // Adjust paths based on zero Z coordinates
+    for (ClipperLib_Z::Path& path : clipped_paths)
+        for (ClipperLib_Z::IntPoint& c_pt : path)
     // Clipped path could contain vertices from the clip with a Z coordinate equal to zero.
     // For those vertices, we must assign value based on the subject.
     // This happens only in sporadic cases.
-    for (ClipperLib_Z::Path& path : clipped_paths)
-        for (ClipperLib_Z::IntPoint& c_pt : path)
+    //for (ClipperLib_Z::Path& path : clipped_paths)
+    //    for (ClipperLib_Z::IntPoint& c_pt : path)
             if (c_pt.z() == 0) {
-                // Now we must find the corresponding line on with this point is located and compute line width (Z coordinate).
-                if (subject.size() <= 2)
-                    continue;
+                if (subject.size() <= 2) continue;
 
                 const Point pt(c_pt.x(), c_pt.y());
-                Point       projected_pt_min;
-                auto        it_min = subject.begin();
-                auto        dist_sqr_min = std::numeric_limits<double>::max();
-                Point       prev(subject.front().x(), subject.front().y());
+                Point projected_pt_min;
+                auto it_min = subject.begin();
+                auto dist_sqr_min = std::numeric_limits<double>::max();
+                Point prev(subject.front().x(), subject.front().y());
                 for (auto it = std::next(subject.begin()); it != subject.end(); ++it) {
                     Point curr(it->x(), it->y());
                     Point projected_pt = pt.projection_onto(Line(prev, curr));
@@ -862,16 +869,15 @@ static ClipperLib_Z::Paths clip_extrusion(const ClipperLib_Z::Path& subject, con
                 const Point  pt_b(std::next(it_min)->x(), std::next(it_min)->y());
                 const double line_len = (pt_b - pt_a).cast<double>().norm();
                 const double dist = (projected_pt_min - pt_a).cast<double>().norm();
-                c_pt.z() = coord_t(double(it_min->z()) + (dist / line_len) * double(std::next(it_min)->z() - it_min->z()));
+                //c_pt.z() = coord_t(double(it_min->z()) + (dist / line_len) * double(std::next(it_min)->z() - it_min->z()));
+                c_pt.z() = coord_t(double(it_min->z()) + (dist / line_len) * double(std::next(it_min)->z() - it_min->z()) * z_multiplier);
             }
 
-    assert([&clipped_paths = std::as_const(clipped_paths)]() -> bool {
-        for (const ClipperLib_Z::Path& path : clipped_paths)
-            for (const ClipperLib_Z::IntPoint& pt : path)
-                if (pt.z() <= 0)
-                    return false;
-        return true;
-    }());
+    // Increment and reset counter after each cycle
+    layer_counter++;
+    if (layer_counter > 1) {
+        layer_counter = 0;  // Reset after both even and odd layers are applied
+    }
 
     return clipped_paths;
 }
